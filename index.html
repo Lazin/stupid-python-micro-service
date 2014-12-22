@@ -1,0 +1,277 @@
+i<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Theme Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css", rel="stylesheet">
+
+    <style type="text/css">
+    body {
+      font: 10px sans-serif;
+    }
+
+    #csvdata-plot {
+        display: none;
+    }
+
+    #csvdata-hist {
+        display: none;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+      display: none;
+    }
+
+    .line {
+      fill: none;
+      color: steelblue;
+      stroke: steelblue;
+      stroke-width: 1.5px;
+    }
+    </style>
+  </head>
+
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Bootstrap theme</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container theme-showcase" role="main">
+
+      <!-- Main jumbotron for a primary marketing message or call to action -->
+      <div class="jumbotron">
+        <h1>Latency report</h1>
+        <p>This is a latency report example. It uses generated data instead of real tickerplant latencies.</p>
+      </div>
+      <div class="page-header">
+        <h1>Single series</h1>
+      </div>
+      <div class="row">
+        <div class="container">
+        <h3>Various descriptive statistics about time-series</h3>
+        <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Metric</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name, value in single_series_desc %}
+                <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ name }}</td>
+                <td>{{ value }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <h3>Time-series scatter plot</h3>
+        <div id="plot" class="row">
+        </div>
+        <div class="page-header">
+          <h1>Combined series</h1>
+        </div>
+        <h3>Descriptive statistics about the whole dataset</h3>
+        <table class="table table-bordered">
+          <thead>
+          <tr>
+            <th>...</th>
+            {% for col in dataset_columns %}
+            <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+          </thead>
+          <tbody>
+          {% for row in dataset_desc %}
+          <tr>
+            {% for item in row %}
+            <td>{{ item }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <h3>Histogram.</h3>
+        <div id="histogram"/>
+          <div id="hist" class="row">
+          </div>
+      </div>
+    </div> <!-- /container -->
+    <pre id="csvdata-plot">
+Timestamp,Value
+{%- for ts, value in single_series_plot %}
+{{ts}}, {{value}}
+{%- endfor -%}
+    </pre>
+    <pre id="csvdata-hist">
+Value,Count
+{%- for cnt, value in single_series_hist %}
+{{cnt}}, {{value}}
+{%- endfor -%}
+    </pre>
+    <script src="http://d3js.org/d3.v3.js"></script>
+    <script>
+
+    // plot_width = 500
+    plot_width = document.getElementById("plot").offsetWidth;
+    var margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = plot_width - margin.left - margin.right,
+        height = 300 - margin.top - margin.bottom;
+
+    // 2014-12-03 00:00:00, 10001.1848081
+    var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
+
+    var x = d3.time.scale()
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    var line = d3.svg.line()
+        .x(function(d) { return x(d.Timestamp); })
+        .y(function(d) { return y(d.Value); });
+
+
+    // Drawing a plot
+
+    var svg = d3.select("div#plot").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var raw = d3.select("pre#csvdata-plot").text();
+    timeseries = d3.csv.parse(raw);
+    timeseries.forEach(function(d){
+        d.Timestamp = parseDate(d.Timestamp);
+        d.Value = +d.Value;
+    });
+    x.domain(d3.extent(timeseries, function(d) { return d.Timestamp; }));
+    y.domain(d3.extent(timeseries, function(d) { return d.Value; }));
+
+    svg.append("g")
+       .attr("class", "x axis")
+       .attr("transform", "translate(0," + height + ")")
+       .call(xAxis);
+
+    svg.append("g")
+       .attr("class", "y axis")
+       .call(yAxis)
+      .append("text")
+       .attr("transform", "rotate(-90)")
+       .attr("y", 6)
+       .attr("dy", ".71em")
+       .style("text-anchor", "end")
+       .text("Value");
+
+    svg.append("path")
+       .datum(timeseries)
+       .attr("class", "line")
+       .attr("d", line);
+
+    // Drowing a histogram
+    raw = d3.select("pre#csvdata-hist").text();
+    histogram = d3.csv.parse(raw);
+    histogram.forEach(function(d){
+        d.Count = +d.Count;
+        d.Value = +d.Value;
+    });
+
+    var hist = d3.svg.line()
+        .x(function(d) { return x(d.Value); })
+        .y(function(d) { return y(d.Count); });
+
+    x = d3.scale.linear()
+        .range([0, width]);
+
+    y = d3.scale.linear()
+        .range([height, 0]);
+
+    x.domain(d3.extent(histogram, function(d) { return d.Value; }));
+    y.domain(d3.extent(histogram, function(d) { return d.Count; }));
+
+    xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    svg = d3.select("div#hist").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.append("g")
+       .attr("class", "x axis")
+       .attr("transform", "translate(0," + height + ")")
+       .call(xAxis);
+
+    svg.append("g")
+       .attr("class", "y axis")
+       .call(yAxis)
+      .append("text")
+       .attr("transform", "rotate(-90)")
+       .attr("y", 6)
+       .attr("dy", ".71em")
+       .style("text-anchor", "end")
+       .text("Count");
+
+    svg.append("path")
+       .datum(histogram)
+       .attr("class", "line")
+       .attr("d", hist);
+    </script>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+  </body>
+</html>
+
