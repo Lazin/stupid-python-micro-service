@@ -71,4 +71,5 @@ class DataServer:
                                      single_series_hist=single_series_hist)
             return result
 
+cherrypy.config.update({'server.socket_port': 80}) 
 cherrypy.quickstart(DataServer())
