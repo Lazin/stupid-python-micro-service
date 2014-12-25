@@ -59,17 +59,43 @@ for ix in range(0, n_bins):
     single_series_hist.append((value, count))
     prev = value
 
+host = None
+
+# Try to open config file and read it
+places = [
+    '/etc/latency-proto.conf',
+    '/usr/share/latency-proto.conf',
+]
+
+for place in places:
+    try:
+        with open(place, 'r') as f:
+            config = json.load(f)
+            host = json['host']
+        break
+    except:
+        # retry in different place
+        pass
+
+if not host:
+    print "Host is not specified"
+    exit()
+
+
 class DataServer:
     """Data server mock, generates some BS data for you."""
+    def __init__(self):
+        with open("index.html", 'r') as template_file:
+            self.__template = Template(template_file.read())
 
     @cherrypy.expose
     def data(self):
-        with open("index.html", 'r') as template_file:
-            template = Template(template_file.read())
-            result = template.render(single_series_plot=single_series_plot,
-                                     description=description,
-                                     single_series_hist=single_series_hist)
-            return result
+        result = self.__template.render(single_series_plot=single_series_plot,
+                                        description=description,
+                                        single_series_hist=single_series_hist,
+                                        host=host
+                                        )
+        return result
 
 cherrypy.config.update({'server.socket_port': 80, 'server.socket_host': '0.0.0.0'}) 
 cherrypy.quickstart(DataServer())
