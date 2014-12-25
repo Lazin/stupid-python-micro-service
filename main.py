@@ -33,6 +33,7 @@ single_series_desc = list(description.iteritems())
 
 resampled_s = s.resample('10S')
 single_series_plot = list(resampled_s.iteritems())
+single_series_plot = [(str(t), v) for (t, v) in single_series_plot]
 
 
 df = pd.DataFrame(all_series, index=timerange)
@@ -101,6 +102,7 @@ class DataServer:
     @cherrypy.tools.json_out()
     def data_api(self, chart='plot', **kwargs):
         if chart == 'plot':
+            print single_series_plot
             return single_series_plot
         elif chart == 'hist':
             return single_series_hist
