@@ -71,7 +71,7 @@ for place in places:
     try:
         with open(place, 'r') as f:
             config = json.load(f)
-            host = json['host']
+            host = config['host']
         break
     except:
         # retry in different place
@@ -89,17 +89,6 @@ class DataServer:
             self.__template = Template(template_file.read())
     
     @cherrypy.expose
-    def thing(self):
-        cherrypy.response.headers['Content-Type'] = 'text/plain'
-        if not authorized():
-            raise cherrypy.NotFound()
-        def content():
-            yield "Hello, "
-            yield "world"
-        return content()
-    thing._cp_config = {'response.stream': True}
-
-    @cherrypy.expose
     def data(self):
         result = self.__template.render(single_series_plot=single_series_plot,
                                         description=description,
@@ -107,6 +96,15 @@ class DataServer:
                                         host=host
                                         )
         return result
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def data_api(self, chart='plot', **kwargs):
+        if chart == 'plot':
+            return single_series_plot
+        elif chart == 'hist':
+            return single_series_hist
+
 
 cherrypy.config.update({'server.socket_port': 80, 'server.socket_host': '0.0.0.0'}) 
 cherrypy.quickstart(DataServer())
