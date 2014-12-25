@@ -87,6 +87,17 @@ class DataServer:
     def __init__(self):
         with open("index.html", 'r') as template_file:
             self.__template = Template(template_file.read())
+    
+    @cherrypy.expose
+    def thing(self):
+        cherrypy.response.headers['Content-Type'] = 'text/plain'
+        if not authorized():
+            raise cherrypy.NotFound()
+        def content():
+            yield "Hello, "
+            yield "world"
+        return content()
+    thing._cp_config = {'response.stream': True}
 
     @cherrypy.expose
     def data(self):
