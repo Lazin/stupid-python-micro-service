@@ -132,18 +132,6 @@ i<!DOCTYPE html>
           </div>
       </div>
     </div> <!-- /container -->
-    <pre id="csvdata-plot">
-Timestamp,Value
-{%- for ts, value in single_series_plot %}
-{{ts}}, {{value}}
-{%- endfor -%}
-    </pre>
-    <pre id="csvdata-hist">
-Value,Count
-{%- for cnt, value in single_series_hist %}
-{{cnt}}, {{value}}
-{%- endfor -%}
-    </pre>
     <script src="http://d3js.org/d3.v3.js"></script>
     <script>
 
@@ -156,116 +144,118 @@ Value,Count
     // 2014-12-03 00:00:00, 10001.1848081
     var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 
-    var x = d3.time.scale()
-        .range([0, width]);
-
-    var y = d3.scale.linear()
-        .range([height, 0]);
-
-    var xAxis = d3.svg.axis()
-        .scale(x)
-        .orient("bottom");
-
-    var yAxis = d3.svg.axis()
-        .scale(y)
-        .orient("left");
-
-    var line = d3.svg.line()
-        .x(function(d) { return x(d.Timestamp); })
-        .y(function(d) { return y(d.Value); });
-
-
     // Drawing a plot
 
-    var svg = d3.select("div#plot").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    d3.json('data_api', function(error, timeseries) {
 
-    var raw = d3.select("pre#csvdata-plot").text();
-    timeseries = d3.csv.parse(raw);
-    timeseries.forEach(function(d){
-        d.Timestamp = parseDate(d.Timestamp);
-        d.Value = +d.Value;
+        timeseries.forEach(function(d){
+            d.Timestamp = parseDate(d.Timestamp);
+            d.Value = +d.Value;
+        });
+
+        var x = d3.time.scale()
+            .range([0, width]);
+
+        var y = d3.scale.linear()
+            .range([height, 0]);
+
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+        var line = d3.svg.line()
+            .x(function(d) { return x(d.Timestamp); })
+            .y(function(d) { return y(d.Value); });
+
+        x.domain(d3.extent(timeseries, function(d) { return d.Timestamp; }));
+        y.domain(d3.extent(timeseries, function(d) { return d.Value; }));
+
+        var svg = d3.select("div#plot").append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+        svg.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+           .call(xAxis);
+
+        svg.append("g")
+               .attr("class", "y axis")
+               .call(yAxis)
+           .append("text")
+               .attr("transform", "rotate(-90)")
+               .attr("y", 6)
+               .attr("dy", ".71em")
+               .style("text-anchor", "end")
+               .text("Value");
+
+        svg.append("path")
+           .datum(timeseries)
+           .attr("class", "line")
+           .attr("d", line);
     });
-    x.domain(d3.extent(timeseries, function(d) { return d.Timestamp; }));
-    y.domain(d3.extent(timeseries, function(d) { return d.Value; }));
-
-    svg.append("g")
-       .attr("class", "x axis")
-       .attr("transform", "translate(0," + height + ")")
-       .call(xAxis);
-
-    svg.append("g")
-       .attr("class", "y axis")
-       .call(yAxis)
-      .append("text")
-       .attr("transform", "rotate(-90)")
-       .attr("y", 6)
-       .attr("dy", ".71em")
-       .style("text-anchor", "end")
-       .text("Value");
-
-    svg.append("path")
-       .datum(timeseries)
-       .attr("class", "line")
-       .attr("d", line);
 
     // Drowing a histogram
-    raw = d3.select("pre#csvdata-hist").text();
-    histogram = d3.csv.parse(raw);
-    histogram.forEach(function(d){
-        d.Count = +d.Count;
-        d.Value = +d.Value;
+    d3.json('data_api?chart=hist', function(error, histogram) {
+        histogram.forEach(function(d){
+            d.Count = +d[1];
+            d.Value = +d[0];
+        });
+
+        var hist = d3.svg.line()
+            .x(function(d) { return x(d.Value); })
+            .y(function(d) { return y(d.Count); });
+
+        var x = d3.scale.linear()
+                  .range([0, width]);
+
+        var y = d3.scale.linear()
+                  .range([height, 0]);
+
+        x.domain(d3.extent(histogram, function(d) { return d.Value; }));
+        y.domain(d3.extent(histogram, function(d) { return d.Count; }));
+
+        var xAxis = d3.svg.axis()
+                      .scale(x)
+                      .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+                      .scale(y)
+                      .orient("left");
+
+        var svg = d3.select("div#hist").append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        svg.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+           .call(xAxis);
+
+        svg.append("g")
+               .attr("class", "y axis")
+               .call(yAxis)
+           .append("text")
+               .attr("transform", "rotate(-90)")
+               .attr("y", 6)
+               .attr("dy", ".71em")
+               .style("text-anchor", "end")
+               .text("Count");
+
+        svg.append("path")
+           .datum(histogram)
+           .attr("class", "line")
+           .attr("d", hist);
     });
-
-    var hist = d3.svg.line()
-        .x(function(d) { return x(d.Value); })
-        .y(function(d) { return y(d.Count); });
-
-    x = d3.scale.linear()
-        .range([0, width]);
-
-    y = d3.scale.linear()
-        .range([height, 0]);
-
-    x.domain(d3.extent(histogram, function(d) { return d.Value; }));
-    y.domain(d3.extent(histogram, function(d) { return d.Count; }));
-
-    xAxis = d3.svg.axis()
-        .scale(x)
-        .orient("bottom");
-
-    yAxis = d3.svg.axis()
-        .scale(y)
-        .orient("left");
-
-    svg = d3.select("div#hist").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    svg.append("g")
-       .attr("class", "x axis")
-       .attr("transform", "translate(0," + height + ")")
-       .call(xAxis);
-
-    svg.append("g")
-       .attr("class", "y axis")
-       .call(yAxis)
-      .append("text")
-       .attr("transform", "rotate(-90)")
-       .attr("y", 6)
-       .attr("dy", ".71em")
-       .style("text-anchor", "end")
-       .text("Count");
-
-    svg.append("path")
-       .datum(histogram)
-       .attr("class", "line")
-       .attr("d", hist);
     </script>
     <!-- Bootstrap core JavaScript
     ================================================== -->

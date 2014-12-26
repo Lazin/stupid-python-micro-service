@@ -33,7 +33,7 @@ single_series_desc = list(description.iteritems())
 
 resampled_s = s.resample('10S')
 single_series_plot = list(resampled_s.iteritems())
-single_series_plot = [(str(t), v) for (t, v) in single_series_plot]
+single_series_plot = [dict(Timestamp=str(t), Value=v) for (t, v) in single_series_plot]
 
 
 df = pd.DataFrame(all_series, index=timerange)
@@ -94,7 +94,10 @@ class DataServer:
         result = self.__template.render(single_series_plot=single_series_plot,
                                         description=description,
                                         single_series_hist=single_series_hist,
-                                        host=host
+                                        host=host,
+                                        dataset_desc=dataset_desc,
+                                        dataset_columns=dataset_columns,
+                                        single_series_desc=single_series_desc,
                                         )
         return result
 
