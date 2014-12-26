@@ -9,9 +9,6 @@ i<!DOCTYPE html>
 
     <title>Theme Template for Bootstrap</title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css", rel="stylesheet">
-
     <style type="text/css">
     body {
       font: 10px sans-serif;
@@ -100,8 +97,10 @@ i<!DOCTYPE html>
             </tbody>
         </table>
         </div>
-        <h3>Time-series scatter plot</h3>
-        <div id="plot" class="row">
+        <h3>Time-series plot</h3>
+        <div class="panel panel-default">
+            <div class="panel-heading">Line plot</div>
+            <div id="plot" class="panel-body"></div>
         </div>
         <div class="page-header">
           <h1>Combined series</h1>
@@ -257,11 +256,17 @@ i<!DOCTYPE html>
            .attr("d", hist);
     });
     </script>
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
+    <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
   </body>
 </html>
 

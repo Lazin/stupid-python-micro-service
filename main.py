@@ -90,10 +90,8 @@ class DataServer:
             self.__template = Template(template_file.read())
     
     @cherrypy.expose
-    def data(self):
-        result = self.__template.render(single_series_plot=single_series_plot,
-                                        description=description,
-                                        single_series_hist=single_series_hist,
+    def dashboard(self):
+        result = self.__template.render(description=description,
                                         host=host,
                                         dataset_desc=dataset_desc,
                                         dataset_columns=dataset_columns,
